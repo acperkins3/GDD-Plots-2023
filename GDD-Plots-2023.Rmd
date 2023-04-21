@@ -12,18 +12,20 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### West Madison
 
-Using the Middleton Airport data (KC29)
+#### Temperature
 
-There is no rainfall data from this station, unfortunately
+Using the Middleton Airport data (KC29) for temperature data
+
+There is no rainfall data included in this, unfortunately
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(curl)
 library(rjson)
 
-curl_download("https://api.weather.gov/stations/KC29/observations", "tmp.json")
+curl_download("https://api.weather.gov/stations/KC29/observations", "KC29.json")
 
-data <- fromJSON(file="tmp.json")
+data <- fromJSON(file="KC29.json")
 
 times <- data.frame(row=factor(),
                     time = character(),
@@ -52,6 +54,19 @@ times <- times %>%
 write.csv(times, "WMARS.csv")
 
 ```
+
+#### Rainfall
+
+Using the UW-Madison Charmany Farm (CHMW3, Vet School facility on Mineral Point Road) for precipitation data
+
+see here: https://mesonet.agron.iastate.edu/request/coop/obs-fe.phtml?network=WI_COOP
+
+```{r}
+curl_download("https://mesonet.agron.iastate.edu/request/coop/obs-dl.php?network=WI_COOP&station%5B%5D=CHMW3&year1=2023&month1=4&day1=10&year2=2023&month2=12&day2=1&what=view&delim=comma", "CHMW3.csv")
+```
+
+The values are in inches. Same for the Michigan data
+
 
 ### Hancock
 
