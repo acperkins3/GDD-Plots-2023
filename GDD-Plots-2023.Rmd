@@ -1,0 +1,362 @@
+---
+title: "GDD-Plots-2022"
+output: html_document
+date: '2022-05-11'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Web Scraping
+
+### West Madison
+
+Using the Middleton Airport data (KC29)
+
+There is no rainfall data from this station, unfortunately
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(curl)
+library(rjson)
+
+curl_download("https://api.weather.gov/stations/KC29/observations", "tmp.json")
+
+data <- fromJSON(file="tmp.json")
+
+times <- data.frame(row=factor(),
+                    time = character(),
+                    temp=double(),
+                    precipitation=double())
+
+for (i in 1:length(data$features)) {
+  if (length((data$features[[i]])$properties$temperature$value) != 0) {
+    tempdf <- data.frame(i, (data$features[[i]])$properties$timestamp, (data$features[[i]])$properties$temperature$value)
+    names(tempdf) <- c("row", "time", "temp")
+    times <- rbind(times, tempdf)
+  }
+}
+
+times <- times %>%
+  separate(time, c("Day", "Time"), sep="T") %>%
+  mutate(Time = substr(Time, 1,5)) %>%
+  separate(Day, c("Year", "Month", "Day")) %>%
+  mutate(tempF = temp * (9/5) + 32) %>%
+  mutate(Date = paste(Month, Day, Year, sep="/")) %>%
+  group_by(Date) %>%
+  summarize(MaxTemp = max(tempF),
+            MinTemp = min(tempF))
+  
+
+write.csv(times, "WMARS.csv")
+
+```
+
+### Hancock
+
+Michigan has changed its website in 2022, so I added `legacy` to the beginnings of the URLs
+
+Year is hard coded in here!
+
+```{r}
+library(rvest)
+
+Date <- Sys.Date()
+
+data <- read_html(paste("https://legacy.enviroweather.msu.edu/run.php?stn=hck&mod=w_sum&da1=28&mo1=4&da2=", (as.numeric(substr(Date, 9, 10))-1), "&mo2=", substr(Date, 6, 7), "&yr=2023&mc=604&ds=cd", sep="")) %>% 
+  html_elements("td") %>%
+  html_text2()
+
+matrix <- t(replace(matrix(NA, 17, ceiling(length(data) / 17)), seq_along(data), data))
+data <- as.data.frame(matrix)
+
+write.table(data, "Hancock.csv", sep=",", col.names=FALSE, row.names=FALSE)
+
+```
+
+### Arlington
+
+```{r}
+library(rvest)
+
+Date <- Sys.Date()
+
+data <- read_html(paste("https://legacy.enviroweather.msu.edu/run.php?stn=alt&mod=w_sum&da1=10&mo1=5&da2=", (as.numeric(substr(Date, 9, 10))-1), "&mo2=", substr(Date, 6, 7), "&yr=2023&mc=604&ds=cd", sep="")) %>% 
+  html_elements("td") %>%
+  html_text2()
+
+matrix <- t(replace(matrix(NA, 17, ceiling(length(data) / 17)), seq_along(data), data))
+data <- as.data.frame(matrix)
+
+write.table(data, "Arlington.csv", sep=",", col.names=FALSE, row.names=FALSE)
+
+```
+
+### Marshfield
+
+```{r}
+library(rvest)
+
+Date <- Sys.Date()
+
+data <- read_html(paste("https://legacy.enviroweather.msu.edu/run.php?stn=mar&mod=w_sum&da1=10&mo1=5&da2=", (as.numeric(substr(Date, 9, 10))-1), "&mo2=", substr(Date, 6, 7), "&yr=2023&mc=604&ds=cd", sep="")) %>% 
+  html_elements("td") %>%
+  html_text2()
+
+matrix <- t(replace(matrix(NA, 17, ceiling(length(data) / 17)), seq_along(data), data))
+data <- as.data.frame(matrix)
+
+write.table(data, "Marshfield.csv", sep=",", col.names=FALSE, row.names=FALSE)
+
+```
+
+## Updating the sheets
+
+If the authentication doesn't work, usually, `gs4_auth()` needs to be run.
+
+### The GDD Equation
+
+```{r}
+calc.daily.GDD <- function (max, min) {
+  min <- ifelse(min < 50, 50, min)
+  max <- ifelse(max > 86, 86, max)
+  mean <- (min + max) / 2
+  ifelse(mean < 50, 0, mean - 50)
+}
+```
+
+
+
+### Hancock
+
+```{r}
+library(lubridate)
+library(googlesheets4)
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+# Initialize the spreadsheet for the season manually if it hasn't been already
+
+if (!file.exists("Hancock_existing.csv")) {
+  WMARS_existing <- read_csv(file = "Date, Max, Min, GDDDaily
+                             05/16/2022, 72.1, 48.9, NA")
+  write.csv(WMARS_existing, "Hancock_existing.csv")
+}
+
+Existing <- read.csv("Hancock_existing.csv") %>%
+  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
+
+New <- read.csv("Hancock.csv") %>%
+  mutate(Date = paste(Date, "/2022", sep="")) %>%
+  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
+  filter(JulianDay %!in% Existing$JulianDay) %>%
+  filter(JulianDay >= 137)
+
+New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
+  mutate(GDDDaily = calc.daily.GDD(max = Max, min = Min)) %>%
+  filter(JulianDay >= 137) %>%
+#  filter(JulianDay < yday(Sys.Date())) %>%
+  arrange(JulianDay) %>%
+  select(Date, Max, Min, GDDDaily)
+
+for (row in 1:nrow(New)) {
+  if (row == 1) {
+    New[row, "K25-K28"] <- New[1, "GDDDaily"]
+  }
+  else {
+    New[row, "K25-K28"] <- New[(row-1), "K25-K28"] + New[row, "GDDDaily"]
+  }
+}
+
+for (row in 2:nrow(New)) {
+  if (row == 2) {
+    New[row, "K29-K32"] <- New[2, "GDDDaily"]
+  }
+  else {
+    New[row, "K29-K32"] <- New[(row-1), "K29-K32"] + New[row, "GDDDaily"]
+  }
+}
+
+for (row in 3:nrow(New)) {
+  if (row == 3) {
+    New[row, "S12-S16"] <- New[3, "GDDDaily"]
+  }
+  else {
+    New[row, "S12-S16"] <- New[(row-1), "S12-S16"] + New[row, "GDDDaily"]
+  }
+}
+
+
+
+
+sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "HAN_automatic")
+
+write.csv(New, "Hancock_existing.csv")
+
+```
+
+
+
+## Plots
+
+### Grain Trials
+
+```{r}
+WMARSExisting <- read.csv("WMARS_existing.csv") %>%
+  select(Date, M800) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+HANExisting <- read.csv("Hancock_existing.csv", check.names = FALSE) %>%
+  select(Date, `K25-K28`) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+ARLExisting <- read.csv("Arlington_existing.csv", check.names = FALSE) %>%
+  select(Date, `1E`, `712`) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+Merged <- merge(WMARSExisting, HANExisting, by = "Date", all=TRUE) %>%
+  merge(ARLExisting, by = "Date", all = TRUE) %>%
+  gather(M800, `K25-K28`, `1E`, `712`, key = "Field", value = "GDDs") %>%
+  mutate(Field = case_when(
+    Field == "M800" ~ "West Madison (M800)",
+    Field == "K25-K28" ~ "Hancock (K25 - K28)",
+    Field == "1E" ~ "Arlington (1E)",
+    Field == "712" ~ "Arlington (712)"
+  ))
+
+Merged$Field <- factor(Merged$Field, levels = c("West Madison (M800)", "Hancock (K25 - K28)", "Arlington (1E)", "Arlington (712)"))
+
+ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
+  geom_line() +
+  theme_classic() +
+  ylab("Cumulative GDDs (ºF)") +
+  ggtitle("Grain Trials") +
+  geom_hline(yintercept = 1200, linetype = 'dotted', col = 'blue') +
+  annotate("text", x = as.Date("06/20/2022", "%m/%d/%y"), y = 1350, label = "~ start of flowering") +
+  geom_hline(yintercept = 120, linetype = 'dotted', col = 'blue') +
+  scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) + 
+  geom_hline(yintercept = 2700, linetype = 'dotted', col = 'black') +
+  annotate("text", x = as.Date("06/30/2022", "%m/%d/%y"), y = 2550, label = "~ physiological maturity")
+
+ggsave("TrialGDDs.png", dpi=200, width = 6, height = 4, units = "in")
+```
+
+
+### Silage
+
+```{r}
+
+WMARSExisting <- read.csv("WMARS_existing.csv") %>%
+  select(Date, M901) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+ARLExisting <- read.csv("Arlington_existing.csv", check.names = FALSE) %>%
+  select(Date, `26N`) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+Merged <- merge(WMARSExisting, ARLExisting, by = "Date", all = TRUE) %>%
+  gather(M901, `26N`, key = "Field", value = "GDDs") %>%
+  mutate(Field = case_when(
+    Field == "M901" ~ "West Madison (M901)",
+    Field == "26N" ~ "Arlington (26N)"
+  ))
+
+Merged$Field <- factor(Merged$Field, levels = c("West Madison (M901)", "Arlington (26N)"))
+
+ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
+  geom_line() +
+  theme_classic() +
+  ylab("Cumulative GDDs (ºF)") +
+  ggtitle("Silage Trials") +
+  geom_hline(yintercept = 2195, linetype = 'dotted', col = 'blue') +
+  annotate("text", x = as.Date("06/30/2022", "%m/%d/%y"), y = 2050, label = "~ 35% dry matter silage") +
+  scale_color_manual(values = c("#00BA38", "#619CFF", "black")) #+
+  #scale_x_date(limits = c(as.Date("05/9/2022", "%m/%d/%y"), as.Date("05/25/2021", "%m/%d/%y")))
+
+
+
+ggsave("Silage.png", dpi=200, width = 6, height = 4, units = "in")
+
+```
+
+### Nursery
+
+```{r}
+WMARSExisting <- read.csv("WMARS_existing.csv") %>%
+  select(Date, H102, B504, B505, P200) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y")) %>%
+  gather(H102, B504, B505, P200, key = "Field", value = "GDDs")
+
+WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H102", "B504", "B505", "P200"))
+
+ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
+  geom_line() + 
+  theme_classic() +
+  ylab("Cumulative GDDs (ºF)") +
+  ggtitle("Nurseries and Observations") +
+  geom_hline(yintercept = 1200, linetype = 'dotted', col = 'blue') +
+  annotate("text", x = as.Date("06/10/2022", "%m/%d/%y"), y = 1100, label = "~ start of flowering") +
+  geom_hline(yintercept = 120, linetype = 'dotted', col = 'blue') +
+  geom_hline(yintercept = 2700, linetype = 'dotted', col = 'black') +
+  annotate("text", x = as.Date("06/10/2022", "%m/%d/%y"), y = 2550, label = "~ physiological maturity")
+
+ggsave("NurseriesGDDs.png", dpi=500, width = 6, height = 4, units = "in")
+```
+
+### Flowering Progress
+
+```
+M800 <- read.csv("~/gem-fact-field/Data2022/GEMN FACT DH X LH244 2022 WM Phenotypes.csv")
+
+M800Flowering <- data.frame(GDDs = unique(M800$AnthesisGDD),
+                            ProportionFlowered = NA,
+                            Field = "M800")
+
+for (row in 1:nrow(M800Flowering)) {
+  ThisValue <- M800Flowering[row, "GDDs"]
+  tempdf <- M800 %>%
+    filter(!is.na(AnthesisGDD)) %>%
+    filter(AnthesisGDD <= ThisValue)
+  M800Flowering[row, "ProportionFlowered"] <- nrow(tempdf) / nrow(M800)
+
+}
+
+PHP02 <- read.csv("~/gem-fact-field/Data2022/GEMS FACT DH X PHP02 2022 ARL Phenotypes.csv")
+
+MBS5411 <- read.csv("~/gem-fact-field/Data2022/GEMS FACT DH X MBS5411 2022 ARL Phenotypes.csv")
+
+LH244 <- read.csv("~/gem-fact-field/Data2022/GEMN FACT DH X LH244 2022 ARL Phenotypes.csv")
+
+ARL712 <- rbind(PHP02, MBS5411, LH244)
+
+ARL712Flowering <- data.frame(GDDs = unique(ARL712$AnthesisGDD),
+                            ProportionFlowered = NA,
+                            Field = "712") %>%
+  filter(!is.na(GDDs))
+
+for (row in 1:nrow(ARL712Flowering)) {
+  ThisValue <- ARL712Flowering[row, "GDDs"]
+  tempdf <- ARL712 %>%
+    filter(!is.na(AnthesisGDD)) %>%
+    filter(AnthesisGDD <= ThisValue)
+  ARL712Flowering[row, "ProportionFlowered"] <- nrow(tempdf) / nrow(ARL712)
+
+}
+
+MergedFlowering <- rbind(M800Flowering, ARL712Flowering)
+
+ggplot(MergedFlowering, aes(GDDs, ProportionFlowered, color = Field)) +
+  geom_line() +
+  xlab("Cumulative GDDs (ºF)") +
+  ylab("Proportion of plots at anthesis") +
+  ggtitle("Flowering Progress") +
+  theme_classic()
+
+ggsave("FloweringProgress.png", dpi=200, width = 6, height = 4, units = "in")
+```
+
+
+Here's the code to run this from the command line
+```
+Rscript -e "rmarkdown::render('GDD-Plots-2022.Rmd')"
+```
