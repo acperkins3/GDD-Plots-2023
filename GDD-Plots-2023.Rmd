@@ -228,10 +228,10 @@ HANExisting <- read.csv("Hancock_existing.csv", check.names = FALSE) %>%
 Merged <- HANExisting %>%
   gather(`S13-S16`, key = "Field", value = "GDDs") %>%
   mutate(Field = case_when(
-    Field == "S13-S16" ~ "Hancock (S16-S16)"
+    Field == "S13-S16" ~ "Hancock (S13-S16)"
   ))
 
-Merged$Field <- factor(Merged$Field, levels = c("Hancock (S16-S16)"))
+Merged$Field <- factor(Merged$Field, levels = c("Hancock (S13-S16)"))
 
 ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() +
