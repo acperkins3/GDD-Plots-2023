@@ -2,7 +2,7 @@
 
 GDD tracking for our 2023 field locations by AP and DCL
 
-This code webscrapes weather data for GDD and precipitation tracking. The output is intended to be viewed in the [GoogleSheet](https://docs.google.com/spreadsheets/d/1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE/edit?usp=sharing), which matches the format used by past lab members. 
+This (very clunky) code webscrapes weather data for GDD and precipitation tracking. The output is intended to be viewed in the [GoogleSheet](https://docs.google.com/spreadsheets/d/1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE/edit?usp=sharing), which matches the format used by past lab members. 
 
 For Arlington, Hancock, and Marshfield, temperature and precipitation both come from the [Michigan State weather stations](https://legacy.enviroweather.msu.edu/run.php?stn=hck&mod=w_sum&da1=7&mo1=4&da2=21&mo2=4&yr=2023&mc=604&ds=cd) located at those facilities. 
 
@@ -12,3 +12,6 @@ The data structure is a bit complicated, but it's a product of the way the APIs 
 
 Please let us know if you have any questions or suggestions!
 
+<p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/TrialGDDs.png" /></p>
+
+<p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/Rainfall.png" /></p>
