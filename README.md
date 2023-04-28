@@ -10,6 +10,17 @@ For West Madison, the temperature data come from the Middleton Airport weather s
 
 The data structure is a bit complicated, but it's a product of the way the APIs work.
 
+GDDs are in degrees F and are calculated using the equation
+
+```
+calc.daily.GDD <- function (max, min) {
+  min <- ifelse(min < 50, 50, min)
+  max <- ifelse(max > 86, 86, max)
+  mean <- (min + max) / 2
+  ifelse(mean < 50, 0, mean - 50)
+}
+```
+
 Please let us know if you have any questions or suggestions!
 
 <p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/TrialGDDs.png" /></p>
