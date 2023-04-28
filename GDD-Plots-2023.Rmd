@@ -239,9 +239,9 @@ ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   ylab("Cumulative GDDs (ºF)") +
   ggtitle("Grain Trials") +
   geom_hline(yintercept = 1200, linetype = 'dotted', col = 'blue') +
-  annotate("text", x = as.Date("05/10/2023", "%m/%d/%y"), y = 1250, label = "Approximate start of flowering") +
+  annotate("text", x = as.Date("05/11/2023", "%m/%d/%y"), y = 1250, label = "Approximate start of flowering") +
   geom_hline(yintercept = 120, linetype = 'dotted', col = 'blue') +
-  annotate("text", x = as.Date("05/10/2023", "%m/%d/%y"), y = 170, label = "Approximate time of emergence") +
+  annotate("text", x = as.Date("05/11/2023", "%m/%d/%y"), y = 170, label = "Approximate time of emergence") +
   scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) +
   scale_x_date(limits = c(as.Date("04/25/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y")))
 
