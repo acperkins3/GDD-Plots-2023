@@ -1,7 +1,6 @@
 ---
-title: "GDD-Plots-2022"
+title: "GDD-Plots-2023"
 output: html_document
-date: '2022-05-11'
 ---
 
 ```{r setup, include=FALSE}
@@ -86,6 +85,8 @@ data <- read_html(paste("https://legacy.enviroweather.msu.edu/run.php?stn=hck&mo
 matrix <- t(replace(matrix(NA, 17, ceiling(length(data) / 17)), seq_along(data), data))
 data <- as.data.frame(matrix)
 
+data[1,16] <- "Rain"
+
 write.table(data, "Hancock.csv", sep=",", col.names=FALSE, row.names=FALSE)
 
 ```
@@ -104,6 +105,8 @@ data <- read_html(paste("https://legacy.enviroweather.msu.edu/run.php?stn=alt&mo
 matrix <- t(replace(matrix(NA, 17, ceiling(length(data) / 17)), seq_along(data), data))
 data <- as.data.frame(matrix)
 
+data[1,16] <- "Rain"
+
 write.table(data, "Arlington.csv", sep=",", col.names=FALSE, row.names=FALSE)
 
 ```
@@ -121,6 +124,8 @@ data <- read_html(paste("https://legacy.enviroweather.msu.edu/run.php?stn=mar&mo
 
 matrix <- t(replace(matrix(NA, 17, ceiling(length(data) / 17)), seq_along(data), data))
 data <- as.data.frame(matrix)
+
+data[1,16] <- "Rain"
 
 write.table(data, "Marshfield.csv", sep=",", col.names=FALSE, row.names=FALSE)
 
@@ -150,59 +155,58 @@ library(lubridate)
 library(googlesheets4)
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
+AddField <- function(data, Name, StartRow) {
+  for (row in StartRow:nrow(data)) {
+    if (row == StartRow) {
+      data[row, Name] <- data[StartRow, "GDDDaily"]
+   }
+    else {
+      data[row, Name] <- data[(row-1), Name] + data[row, "GDDDaily"]
+    }
+  }
+  return(data)
+}
+
+CumulativeRain <- function(data) {
+  for (row in 1:nrow(data)) {
+    if(row == 1) {
+      data[row, "Cumulative Rainfall (in)"] <- data[row, "Rain"]
+    }
+    else {
+      data[row, "Cumulative Rainfall (in)"] <- data[(row-1), "Cumulative Rainfall (in)"]
+    }
+  }
+  return(data)
+}
+
 # Initialize the spreadsheet for the season manually if it hasn't been already
 
 if (!file.exists("Hancock_existing.csv")) {
-  WMARS_existing <- read_csv(file = "Date, Max, Min, GDDDaily
-                             05/16/2022, 72.1, 48.9, NA")
-  write.csv(WMARS_existing, "Hancock_existing.csv")
+  existing <- read_csv(file = "Date, Max, Min, Rain, GDDDaily
+                             4/25/2023, 49.2, 31.5, 0, NA")
+  write.csv(existing, "Hancock_existing.csv")
 }
 
 Existing <- read.csv("Hancock_existing.csv") %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
 
 New <- read.csv("Hancock.csv") %>%
-  mutate(Date = paste(Date, "/2022", sep="")) %>%
+  mutate(Date = paste(Date, "/2023", sep="")) %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
   filter(JulianDay %!in% Existing$JulianDay) %>%
-  filter(JulianDay >= 137)
+  filter(JulianDay > 115)
 
 New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   mutate(GDDDaily = calc.daily.GDD(max = Max, min = Min)) %>%
-  filter(JulianDay >= 137) %>%
+  filter(JulianDay >= 115) %>%
 #  filter(JulianDay < yday(Sys.Date())) %>%
   arrange(JulianDay) %>%
-  select(Date, Max, Min, GDDDaily)
-
-for (row in 1:nrow(New)) {
-  if (row == 1) {
-    New[row, "K25-K28"] <- New[1, "GDDDaily"]
-  }
-  else {
-    New[row, "K25-K28"] <- New[(row-1), "K25-K28"] + New[row, "GDDDaily"]
-  }
-}
-
-for (row in 2:nrow(New)) {
-  if (row == 2) {
-    New[row, "K29-K32"] <- New[2, "GDDDaily"]
-  }
-  else {
-    New[row, "K29-K32"] <- New[(row-1), "K29-K32"] + New[row, "GDDDaily"]
-  }
-}
-
-for (row in 3:nrow(New)) {
-  if (row == 3) {
-    New[row, "S12-S16"] <- New[3, "GDDDaily"]
-  }
-  else {
-    New[row, "S12-S16"] <- New[(row-1), "S12-S16"] + New[row, "GDDDaily"]
-  }
-}
-
-
-
+  select(Date, Max, Min, Rain, GDDDaily) %>%
+  CumulativeRain() %>%
+  AddField("S13-S16", 1) %>%
+  AddField("S21-S24", 2) %>%
+  AddField("S9-S12", 3) %>%
+  AddField("S17-S20", 3)
 
 sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "HAN_automatic")
 
@@ -217,29 +221,17 @@ write.csv(New, "Hancock_existing.csv")
 ### Grain Trials
 
 ```{r}
-WMARSExisting <- read.csv("WMARS_existing.csv") %>%
-  select(Date, M800) %>%
-  mutate(Date = as.Date(Date, "%m/%d/%y"))
-
 HANExisting <- read.csv("Hancock_existing.csv", check.names = FALSE) %>%
-  select(Date, `K25-K28`) %>%
+  select(Date, `S13-S16`) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-ARLExisting <- read.csv("Arlington_existing.csv", check.names = FALSE) %>%
-  select(Date, `1E`, `712`) %>%
-  mutate(Date = as.Date(Date, "%m/%d/%y"))
-
-Merged <- merge(WMARSExisting, HANExisting, by = "Date", all=TRUE) %>%
-  merge(ARLExisting, by = "Date", all = TRUE) %>%
-  gather(M800, `K25-K28`, `1E`, `712`, key = "Field", value = "GDDs") %>%
+Merged <- HANExisting %>%
+  gather(`S13-S16`, key = "Field", value = "GDDs") %>%
   mutate(Field = case_when(
-    Field == "M800" ~ "West Madison (M800)",
-    Field == "K25-K28" ~ "Hancock (K25 - K28)",
-    Field == "1E" ~ "Arlington (1E)",
-    Field == "712" ~ "Arlington (712)"
+    Field == "S13-S16" ~ "Hancock (S16-S16)"
   ))
 
-Merged$Field <- factor(Merged$Field, levels = c("West Madison (M800)", "Hancock (K25 - K28)", "Arlington (1E)", "Arlington (712)"))
+Merged$Field <- factor(Merged$Field, levels = c("Hancock (S16-S16)"))
 
 ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() +
@@ -247,11 +239,11 @@ ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   ylab("Cumulative GDDs (ºF)") +
   ggtitle("Grain Trials") +
   geom_hline(yintercept = 1200, linetype = 'dotted', col = 'blue') +
-  annotate("text", x = as.Date("06/20/2022", "%m/%d/%y"), y = 1350, label = "~ start of flowering") +
+  annotate("text", x = as.Date("05/10/2023", "%m/%d/%y"), y = 1250, label = "Approximate start of flowering") +
   geom_hline(yintercept = 120, linetype = 'dotted', col = 'blue') +
-  scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) + 
-  geom_hline(yintercept = 2700, linetype = 'dotted', col = 'black') +
-  annotate("text", x = as.Date("06/30/2022", "%m/%d/%y"), y = 2550, label = "~ physiological maturity")
+  annotate("text", x = as.Date("05/10/2023", "%m/%d/%y"), y = 170, label = "Approximate time of emergence") +
+  scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) +
+  scale_x_date(limits = c(as.Date("04/25/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y")))
 
 ggsave("TrialGDDs.png", dpi=200, width = 6, height = 4, units = "in")
 ```
@@ -259,7 +251,7 @@ ggsave("TrialGDDs.png", dpi=200, width = 6, height = 4, units = "in")
 
 ### Silage
 
-```{r}
+```
 
 WMARSExisting <- read.csv("WMARS_existing.csv") %>%
   select(Date, M901) %>%
@@ -296,7 +288,7 @@ ggsave("Silage.png", dpi=200, width = 6, height = 4, units = "in")
 
 ### Nursery
 
-```{r}
+```
 WMARSExisting <- read.csv("WMARS_existing.csv") %>%
   select(Date, H102, B504, B505, P200) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y")) %>%
@@ -318,57 +310,29 @@ ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
 ggsave("NurseriesGDDs.png", dpi=500, width = 6, height = 4, units = "in")
 ```
 
-### Flowering Progress
+## Rainfall
 
-```
-M800 <- read.csv("~/gem-fact-field/Data2022/GEMN FACT DH X LH244 2022 WM Phenotypes.csv")
+```{r}
+HANExisting <- read.csv("Hancock_existing.csv", check.names = FALSE) %>%
+  select(Date, Hancock = `Cumulative Rainfall (in)`) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-M800Flowering <- data.frame(GDDs = unique(M800$AnthesisGDD),
-                            ProportionFlowered = NA,
-                            Field = "M800")
+Merged <- HANExisting %>%
+  gather(Hancock, key = "Location", value = "Rainfall")
 
-for (row in 1:nrow(M800Flowering)) {
-  ThisValue <- M800Flowering[row, "GDDs"]
-  tempdf <- M800 %>%
-    filter(!is.na(AnthesisGDD)) %>%
-    filter(AnthesisGDD <= ThisValue)
-  M800Flowering[row, "ProportionFlowered"] <- nrow(tempdf) / nrow(M800)
+Merged$Location <- factor(Merged$Location, levels = c("Hancock"))
 
-}
-
-PHP02 <- read.csv("~/gem-fact-field/Data2022/GEMS FACT DH X PHP02 2022 ARL Phenotypes.csv")
-
-MBS5411 <- read.csv("~/gem-fact-field/Data2022/GEMS FACT DH X MBS5411 2022 ARL Phenotypes.csv")
-
-LH244 <- read.csv("~/gem-fact-field/Data2022/GEMN FACT DH X LH244 2022 ARL Phenotypes.csv")
-
-ARL712 <- rbind(PHP02, MBS5411, LH244)
-
-ARL712Flowering <- data.frame(GDDs = unique(ARL712$AnthesisGDD),
-                            ProportionFlowered = NA,
-                            Field = "712") %>%
-  filter(!is.na(GDDs))
-
-for (row in 1:nrow(ARL712Flowering)) {
-  ThisValue <- ARL712Flowering[row, "GDDs"]
-  tempdf <- ARL712 %>%
-    filter(!is.na(AnthesisGDD)) %>%
-    filter(AnthesisGDD <= ThisValue)
-  ARL712Flowering[row, "ProportionFlowered"] <- nrow(tempdf) / nrow(ARL712)
-
-}
-
-MergedFlowering <- rbind(M800Flowering, ARL712Flowering)
-
-ggplot(MergedFlowering, aes(GDDs, ProportionFlowered, color = Field)) +
+ggplot(Merged, aes(Date, Rainfall, group=Location, color=Location)) +
   geom_line() +
-  xlab("Cumulative GDDs (ºF)") +
-  ylab("Proportion of plots at anthesis") +
-  ggtitle("Flowering Progress") +
-  theme_classic()
+  theme_classic() +
+  ylab("Cumulative Rainfall (in.)") +
+  scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) +
+  scale_x_date(limits = c(as.Date("04/25/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y"))) +
+  scale_y_continuous(limits = c(0, 5))
 
-ggsave("FloweringProgress.png", dpi=200, width = 6, height = 4, units = "in")
+ggsave("Rainfall.png", dpi=200, width = 6, height = 4, units = "in")
 ```
+
 
 
 Here's the code to run this from the command line
