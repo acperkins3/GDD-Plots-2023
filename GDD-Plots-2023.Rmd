@@ -337,5 +337,5 @@ ggsave("Rainfall.png", dpi=200, width = 6, height = 4, units = "in")
 
 Here's the code to run this from the command line
 ```
-Rscript -e "rmarkdown::render('GDD-Plots-2022.Rmd')"
+Rscript -e "rmarkdown::render('GDD-Plots-2023.Rmd')"
 ```
