@@ -173,7 +173,7 @@ CumulativeRain <- function(data) {
       data[row, "Cumulative Rainfall (in)"] <- data[row, "Rain"]
     }
     else {
-      data[row, "Cumulative Rainfall (in)"] <- data[(row-1), "Cumulative Rainfall (in)"]
+      data[row, "Cumulative Rainfall (in)"] <- data[(row-1), "Cumulative Rainfall (in)"] + data[row, "Rain"]
     }
   }
   return(data)
