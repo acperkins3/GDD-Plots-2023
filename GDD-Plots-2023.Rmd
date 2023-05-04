@@ -217,7 +217,7 @@ write.csv(New, "Hancock_existing.csv")
 
 ### WMARS
 
-```
+```{r}
 library(lubridate)
 library(googlesheets4)
 '%!in%' <- function(x,y)!('%in%'(x,y))
@@ -226,7 +226,7 @@ library(googlesheets4)
 
 if (!file.exists("WMARS_existing.csv")) {
   WMARS_existing <- read_csv(file = "Date, MaxTemp, MinTemp, Rain, GDDDaily
-                             05/3/2023, 62, 34, 0, NA")
+                             05/03/2023, 63.14, 33.62, 0, NA")
   write.csv(WMARS_existing, "WMARS_existing.csv")
 }
 
@@ -245,7 +245,7 @@ New <- read.csv("WMARS.csv") %>%
 
 New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   mutate(GDDDaily = calc.daily.GDD(max = MaxTemp, min = MinTemp)) %>%
-  filter(JulianDay >= 123) %>%
+  filter(JulianDay > 123) %>%
   filter(JulianDay <= yday(Sys.Date())) %>% #This isn't quite right
   arrange(JulianDay) %>%
   select(Date, MaxTemp, MinTemp, Rain, GDDDaily) %>%
@@ -269,13 +269,18 @@ HANExisting <- read.csv("Hancock_existing.csv", check.names = FALSE) %>%
   select(Date, `S13-S16`) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-Merged <- HANExisting %>%
-  gather(`S13-S16`, key = "Field", value = "GDDs") %>%
+WMARSExisting <- read.csv("WMARS_existing.csv", check.names = FALSE) %>%
+  select(Date, M1400) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+Merged <- merge(HANExisting, WMARSExisting, by = "Date", all = TRUE) %>%
+  gather(`S13-S16`, M1400, key = "Field", value = "GDDs") %>%
   mutate(Field = case_when(
-    Field == "S13-S16" ~ "Hancock (S13-S16)"
+    Field == "S13-S16" ~ "Hancock (S13-S16)",
+    Field == "M1400" ~ "West Madison (M1400)"
   ))
 
-Merged$Field <- factor(Merged$Field, levels = c("Hancock (S13-S16)"))
+Merged$Field <- factor(Merged$Field, levels = c("Hancock (S13-S16)", "West Madison (M1400)"))
 
 ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() +
@@ -361,10 +366,14 @@ HANExisting <- read.csv("Hancock_existing.csv", check.names = FALSE) %>%
   select(Date, Hancock = `Cumulative Rainfall (in)`) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-Merged <- HANExisting %>%
-  gather(Hancock, key = "Location", value = "Rainfall")
+WMARSExisting <- read.csv("WMARS_existing.csv", check.names = FALSE) %>%
+  select(Date, `West Madison` = `Cumulative Rainfall (in)`) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-Merged$Location <- factor(Merged$Location, levels = c("Hancock"))
+Merged <- merge(HANExisting, WMARSExisting, by = "Date", all = TRUE) %>%
+  gather(Hancock, `West Madison`, key = "Location", value = "Rainfall")
+
+Merged$Location <- factor(Merged$Location, levels = c("Hancock", "West Madison"))
 
 ggplot(Merged, aes(Date, Rainfall, group=Location, color=Location)) +
   geom_line() +
