@@ -215,6 +215,50 @@ write.csv(New, "Hancock_existing.csv")
 ```
 
 
+### WMARS
+
+```
+library(lubridate)
+library(googlesheets4)
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+# Initialize the spreadsheet for the season manually if it hasn't been already
+
+if (!file.exists("WMARS_existing.csv")) {
+  WMARS_existing <- read_csv(file = "Date, MaxTemp, MinTemp, Rain, GDDDaily
+                             05/3/2023, 62, 34, 0, NA")
+  write.csv(WMARS_existing, "WMARS_existing.csv")
+}
+
+Existing <- read.csv("WMARS_existing.csv") %>%
+  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
+
+NewRain <- read.csv("CHMW3.csv") %>%
+  mutate(JulianDay = yday(date)) %>%
+  select(JulianDay, Rain = precip)
+
+New <- read.csv("WMARS.csv") %>%
+  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
+  merge(NewRain, by = "JulianDay") %>%
+  filter(JulianDay %!in% Existing$JulianDay)
+
+
+New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
+  mutate(GDDDaily = calc.daily.GDD(max = MaxTemp, min = MinTemp)) %>%
+  filter(JulianDay >= 123) %>%
+  filter(JulianDay <= yday(Sys.Date())) %>% #This isn't quite right
+  arrange(JulianDay) %>%
+  select(Date, MaxTemp, MinTemp, Rain, GDDDaily) %>%
+  CumulativeRain() %>%
+  AddField("M1400", 1)
+
+
+sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "WM_automatic")
+
+write.csv(New, "WMARS_existing.csv")
+```
+
+
 
 ## Plots
 
