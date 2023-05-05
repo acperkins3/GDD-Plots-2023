@@ -1,2 +1,3 @@
-"","Date","MaxTemp","MinTemp","Rain","GDDDaily","Cumulative Rainfall (in)","M1400"
-"1","05/03/2023",63.14,33.62,0,6.57,0,6.57
+"","Date","MaxTemp","MinTemp","Rain","GDDDaily","Cumulative Rainfall (in)","M1400","M1500","H703"
+"1","05/03/2023",63.14,33.62,0,6.57,0,6.57,NA,NA
+"2","05/04/2023",75.56,38.3,NA,12.78,NA,19.35,12.78,12.78
