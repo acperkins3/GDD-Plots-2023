@@ -234,7 +234,7 @@ Existing <- read.csv("WMARS_existing.csv") %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
 
 NewRain <- read.csv("CHMW3.csv") %>%
-  mutate(JulianDay = yday(date)) %>%
+  mutate(JulianDay = yday(date) + 1) %>% #Julian days don't match WM for reasons I don't know
   select(JulianDay, Rain = precip)
 
 New <- read.csv("WMARS.csv") %>%
@@ -348,7 +348,7 @@ ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
   ylab("Cumulative GDDs (ºF)") +
   ggtitle("Nurseries and Observations") +
   geom_hline(yintercept = 1200, linetype = 'dotted', col = 'blue') +
-  annotate("text", x = as.Date("05/11/2023", "%m/%d/%y"), y = 1100, label = "~ start of flowering") +
+  annotate("text", x = as.Date("05/11/2023", "%m/%d/%y"), y = 1100, label = "Approximate start of flowering") +
   geom_hline(yintercept = 120, linetype = 'dotted', col = 'blue') +
   #geom_hline(yintercept = 2700, linetype = 'dotted', col = 'black') +
   #annotate("text", x = as.Date("05/10/2023", "%m/%d/%y"), y = 2550, label = "~ physiological maturity") +
@@ -380,7 +380,8 @@ ggplot(Merged, aes(Date, Rainfall, group=Location, color=Location)) +
   ylab("Cumulative Rainfall (in.)") +
   scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) +
   scale_x_date(limits = c(as.Date("04/25/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y"))) +
-  scale_y_continuous(limits = c(0, 5))
+  scale_y_continuous(limits = c(0, 5)) +
+  labs(title = "Rainfall", subtitle = "Note: WM rainfall periods start and end at 6 am rather than midnight")
 
 ggsave("Rainfall.png", dpi=200, width = 6, height = 4, units = "in")
 ```
