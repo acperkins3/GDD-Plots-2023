@@ -26,3 +26,7 @@ Please let us know if you have any questions or suggestions!
 <p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/TrialGDDs.png" /></p>
 
 <p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/Rainfall.png" /></p>
+
+<p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/Silage.png" /></p>
+
+<p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/NurseriesGDDs.png" /></p>
