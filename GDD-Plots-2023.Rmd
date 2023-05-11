@@ -240,7 +240,8 @@ NewRain <- read.csv("CHMW3.csv") %>%
 New <- read.csv("WMARS.csv") %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
   merge(NewRain, by = "JulianDay") %>%
-  filter(JulianDay %!in% Existing$JulianDay)
+  filter(JulianDay %!in% Existing$JulianDay) %>%
+  mutate(Rain = ifelse(is.na(Rain), 0, Rain)) # Sometimes there are missing values
 
 
 New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
