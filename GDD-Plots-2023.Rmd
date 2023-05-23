@@ -254,9 +254,9 @@ New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   AddField("M1400", 1) %>%
   AddField("M1500", 2) %>%
   AddField("H703", 2) %>%
-  AddField("B501", 21) %>%
-  AddField("B502", 21) %>%
-  AddField("H101", 21)
+  AddField("B501", 20) %>%
+  AddField("B502", 20) %>%
+  AddField("H101", 20)
 
 
 sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "WM_automatic")
