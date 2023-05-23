@@ -253,7 +253,10 @@ New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   CumulativeRain() %>%
   AddField("M1400", 1) %>%
   AddField("M1500", 2) %>%
-  AddField("H703", 2)
+  AddField("H703", 2) %>%
+  AddField("B501", 21) %>%
+  AddField("B502", 21) %>%
+  AddField("H101", 21)
 
 
 sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "WM_automatic")
@@ -294,8 +297,8 @@ ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   annotate("text", x = as.Date("05/11/2023", "%m/%d/%y"), y = 1250, label = "Approximate start of flowering") +
   geom_hline(yintercept = 120, linetype = 'dotted', col = 'blue') +
   annotate("text", x = as.Date("05/11/2023", "%m/%d/%y"), y = 170, label = "Approximate time of emergence") +
-  scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) +
-  scale_x_date(limits = c(as.Date("04/25/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y")))
+  scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) #+
+  #scale_x_date(limits = c(as.Date("04/25/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y")))
 
 ggsave("TrialGDDs.png", dpi=200, width = 6, height = 4, units = "in")
 ```
@@ -324,8 +327,8 @@ ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   ggtitle("Silage Trials") +
   geom_hline(yintercept = 2195, linetype = 'dotted', col = 'blue') +
   annotate("text", x = as.Date("05/11/2023", "%m/%d/%y"), y = 2050, label = "~ 35% dry matter silage") +
-  scale_color_manual(values = c("#00BA38", "#619CFF", "black")) +
-  scale_x_date(limits = c(as.Date("05/1/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y")))
+  scale_color_manual(values = c("#00BA38", "#619CFF", "black")) #+
+  #scale_x_date(limits = c(as.Date("05/1/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y")))
 
 
 
@@ -337,11 +340,12 @@ ggsave("Silage.png", dpi=200, width = 6, height = 4, units = "in")
 
 ```{r}
 WMARSExisting <- read.csv("WMARS_existing.csv") %>%
-  select(Date, H703) %>%
+  select(Date, H703, B501) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y")) %>%
-  gather(H703, key = "Field", value = "GDDs")
+  gather(H703, B501, key = "Field", value = "GDDs") %>%
+  mutate(Field = ifelse(Field == "B501", "B501, B502, H101", Field))
 
-WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703"))
+WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101"))
 
 ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() + 
@@ -353,7 +357,7 @@ ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
   geom_hline(yintercept = 120, linetype = 'dotted', col = 'blue') +
   #geom_hline(yintercept = 2700, linetype = 'dotted', col = 'black') +
   #annotate("text", x = as.Date("05/10/2023", "%m/%d/%y"), y = 2550, label = "~ physiological maturity") +
-  scale_x_date(limits = c(as.Date("05/1/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y"))) +
+  #scale_x_date(limits = c(as.Date("05/1/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y"))) +
   annotate("text", x = as.Date("05/11/2023", "%m/%d/%y"), y = 170, label = "Approximate time of emergence")
 
 ggsave("NurseriesGDDs.png", dpi=500, width = 6, height = 4, units = "in")
@@ -378,9 +382,9 @@ Merged$Location <- factor(Merged$Location, levels = c("Hancock", "West Madison")
 ggplot(Merged, aes(Date, Rainfall, group=Location, color=Location)) +
   geom_line() +
   theme_classic() +
-  ylab("Cumulative Rainfall (in.)") +
+  ylab("Cumulative rainfall (in.)") +
   scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) +
-  scale_x_date(limits = c(as.Date("04/25/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y"))) +
+  #scale_x_date(limits = c(as.Date("04/25/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y"))) +
   scale_y_continuous(limits = c(0, 5)) +
   labs(title = "Rainfall", subtitle = "Note: WM rainfall periods start and end at 6 am rather than midnight")
 
