@@ -264,6 +264,85 @@ sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "WM_automatic")
 write.csv(New, "WMARS_existing.csv")
 ```
 
+### Arlington
+
+```{r}
+library(lubridate)
+library(googlesheets4)
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+
+# Initialize the spreadsheet for the season manually if it hasn't been already
+
+if (!file.exists("Arlington_existing.csv")) {
+  existing <- read_csv(file = "Date, Max, Min, Rain, GDDDaily
+                             5/11/2023, 81, 45.4, 0, NA")
+  write.csv(existing, "Arlington_existing.csv")
+}
+
+Existing <- read.csv("Arlington_existing.csv") %>%
+  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
+
+New <- read.csv("Arlington.csv") %>%
+  mutate(Date = paste(Date, "/2023", sep="")) %>%
+  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
+  filter(JulianDay %!in% Existing$JulianDay) %>%
+  filter(JulianDay > 131)
+
+New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
+  mutate(GDDDaily = calc.daily.GDD(max = Max, min = Min)) %>%
+  filter(JulianDay >= 131) %>%
+#  filter(JulianDay < yday(Sys.Date())) %>%
+  arrange(JulianDay) %>%
+  select(Date, Max, Min, Rain, GDDDaily) %>%
+  CumulativeRain() %>%
+  AddField("28E", 1)
+
+sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "ARL_automatic")
+
+write.csv(New, "Arlington_existing.csv")
+
+```
+
+### Marshifeld
+
+```{r}
+library(lubridate)
+library(googlesheets4)
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+
+# Initialize the spreadsheet for the season manually if it hasn't been already
+
+if (!file.exists("Marshfield_existing.csv")) {
+  existing <- read_csv(file = "Date, Max, Min, Rain, GDDDaily
+                             5/25/2023, 67.8, 39, 0, NA")
+  write.csv(existing, "Marshfield_existing.csv")
+}
+
+Existing <- read.csv("Marshfield_existing.csv") %>%
+  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
+
+New <- read.csv("Marshfield.csv") %>%
+  mutate(Date = paste(Date, "/2023", sep="")) %>%
+  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
+  filter(JulianDay %!in% Existing$JulianDay) %>%
+  filter(JulianDay > 145)
+
+New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
+  mutate(GDDDaily = calc.daily.GDD(max = Max, min = Min)) %>%
+  filter(JulianDay >= 145) %>%
+#  filter(JulianDay < yday(Sys.Date())) %>%
+  arrange(JulianDay) %>%
+  select(Date, Max, Min, Rain, GDDDaily) %>%
+  CumulativeRain() %>%
+  AddField("Marshfield", 1)
+
+sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "MAR_automatic")
+
+write.csv(New, "Marshfield_existing.csv")
+
+```
 
 
 ## Plots
@@ -279,14 +358,25 @@ WMARSExisting <- read.csv("WMARS_existing.csv", check.names = FALSE) %>%
   select(Date, M1400) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-Merged <- merge(HANExisting, WMARSExisting, by = "Date", all = TRUE) %>%
-  gather(`S13-S16`, M1400, key = "Field", value = "GDDs") %>%
+ARLExisting <- read.csv("Arlington_existing.csv", check.names = FALSE) %>%
+  select(Date, `28E`) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+MARExisting <- read.csv("Marshfield_existing.csv", check.names = FALSE) %>%
+  select(Date, Marshfield) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+Merged <- list(HANExisting, WMARSExisting, ARLExisting, MARExisting) %>%
+  reduce(merge, by = "Date", all = TRUE) %>%
+  gather(`S13-S16`, M1400, `28E`, Marshfield, key = "Field", value = "GDDs") %>%
   mutate(Field = case_when(
     Field == "S13-S16" ~ "Hancock (S13-S16)",
-    Field == "M1400" ~ "West Madison (M1400)"
-  ))
+    Field == "M1400" ~ "West Madison (M1400)",
+    Field == "28E" ~ "Arlington (28E)",
+    TRUE ~ Field
+  )) %>%
+  mutate(Field = factor(Field, levels = c("Hancock (S13-S16)", "West Madison (M1400)", "Arlington (28E)", "Marshfield")))
 
-Merged$Field <- factor(Merged$Field, levels = c("Hancock (S13-S16)", "West Madison (M1400)"))
 
 ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() +
