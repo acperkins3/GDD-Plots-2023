@@ -465,10 +465,19 @@ WMARSExisting <- read.csv("WMARS_existing.csv", check.names = FALSE) %>%
   select(Date, `West Madison` = `Cumulative Rainfall (in)`) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-Merged <- merge(HANExisting, WMARSExisting, by = "Date", all = TRUE) %>%
-  gather(Hancock, `West Madison`, key = "Location", value = "Rainfall")
+MARExisting <- read.csv("Marshfield_existing.csv", check.names = FALSE) %>%
+  select(Date, Marshfield = `Cumulative Rainfall (in)`) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-Merged$Location <- factor(Merged$Location, levels = c("Hancock", "West Madison"))
+ARLExisting <- read.csv("Arlington_existing.csv", check.names = FALSE) %>%
+  select(Date, `Arlington` = `Cumulative Rainfall (in)`) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+Merged <- list(HANExisting, WMARSExisting, MARExisting, ARLExisting) %>%
+  reduce(merge, by = "Date", all = TRUE) %>%
+  gather(Hancock, `West Madison`, Arlington, Marshfield, key = "Location", value = "Rainfall")
+
+Merged$Location <- factor(Merged$Location, levels = c("Hancock", "West Madison", "Arlington", "Marshfield"))
 
 ggplot(Merged, aes(Date, Rainfall, group=Location, color=Location)) +
   geom_line() +
