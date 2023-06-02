@@ -262,7 +262,8 @@ New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   AddField("B501", 20) %>%
   AddField("B502", 20) %>%
   AddField("H101", 20) %>%
-  AddField("B601", 29)
+  AddField("B601", 29) %>%
+  AddField("H702", 30)
 
 
 sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "WM_automatic")
@@ -436,12 +437,12 @@ ggsave("Silage.png", dpi=200, width = 6, height = 4, units = "in")
 
 ```{r}
 WMARSExisting <- read.csv("WMARS_existing.csv") %>%
-  select(Date, H703, B501) %>%
+  select(Date, H703, B501, B601, H702) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y")) %>%
-  gather(H703, B501, key = "Field", value = "GDDs") %>%
+  gather(H703, B501, B601, H702, key = "Field", value = "GDDs") %>%
   mutate(Field = ifelse(Field == "B501", "B501, B502, H101", Field))
 
-WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101"))
+WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101", "B601", "H702"))
 
 ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() + 
