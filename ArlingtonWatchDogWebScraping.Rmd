@@ -1,0 +1,31 @@
+---
+title: "WatchDogScraping"
+output: html_document
+date: "2023-06-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This is to download the current measurements from the WatchDog weather station in Arlington
+
+There doesn't seem to be an easy way to get the highs and lows off of it, so this needs to be run more often
+
+```{r}
+library(tidyverse)
+library(rvest)
+
+Existing <- read.csv("ARLWatchdogExisting.csv")
+
+data <- read_html("https://www.specconnect.net/currentconditions/publicview?serialnumber=270011997&title=Current+Conditions&rfhours=24") %>% 
+  html_elements(".value") %>%
+  html_text2()
+
+NewReading <- data.frame(Time = as.character(Sys.time()), AirTemp = str_sub(data[6], 3, -3), SoilMoisture = str_sub(data[1], 3, -6), Rainfall = str_sub(data[7], 3, -8)) %>%
+  mutate(across(c("AirTemp", "SoilMoisture", "Rainfall"), as.numeric))
+
+rbind(Existing, NewReading) %>%
+  write_csv("ARLWatchdogExisting.csv")
+```
+
