@@ -93,23 +93,7 @@ write.table(data, "Hancock.csv", sep=",", col.names=FALSE, row.names=FALSE)
 
 ### Arlington
 
-```{r}
-library(rvest)
 
-Date <- Sys.Date()
-
-data <- read_html(paste("https://legacy.enviroweather.msu.edu/run.php?stn=alt&mod=w_sum&da1=10&mo1=5&da2=", (as.numeric(substr(Date, 9, 10))-1), "&mo2=", substr(Date, 6, 7), "&yr=2023&mc=604&ds=cd", sep="")) %>% 
-  html_elements("td") %>%
-  html_text2()
-
-matrix <- t(replace(matrix(NA, 17, ceiling(length(data) / 17)), seq_along(data), data))
-data <- as.data.frame(matrix)
-
-data[1,16] <- "Rain"
-
-write.table(data, "Arlington.csv", sep=",", col.names=FALSE, row.names=FALSE)
-
-```
 
 ### Marshfield
 
@@ -290,20 +274,41 @@ if (!file.exists("Arlington_existing.csv")) {
 Existing <- read.csv("Arlington_existing.csv") %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
 
-New <- read.csv("Arlington.csv") %>%
-  mutate(Date = paste(Date, "/2023", sep="")) %>%
+NewTemp <- read.csv("ARLWatchdogExisting.csv") %>%
+  mutate(Date = as.character(as.Date(Time))) %>%
+  separate(Date, c("Year", "Month", "Day")) %>%
+  mutate(Date = paste(Month, Day, Year, sep="/")) %>%
+  group_by(Date) %>%
+  summarize(Min = min(AirTemp),
+            Max = max(AirTemp)) %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
-  filter(JulianDay %!in% Existing$JulianDay) %>%
-  filter(JulianDay > 131)
+  ungroup()
 
-New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
+NewRain <- read.csv("ARLWatchdogExisting.csv") %>%
+  mutate(Date = as.character(as.Date(Time))) %>%
+  separate(Date, c("Year", "Month", "Day")) %>%
+  mutate(Date = paste(Month, Day, Year, sep="/")) %>%
+  group_by(Date) %>%
+  slice_tail() %>%
+  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
+  ungroup() %>%
+  select(JulianDay, Rain = Rainfall)
+
+NewMerged <- merge(NewTemp, NewRain, by = "JulianDay") %>%
+  filter(JulianDay %!in% Existing$JulianDay) %>%
+  filter(JulianDay > 130)
+
+New <- merge(Existing, NewMerged, sort=FALSE, all=TRUE) %>%
   mutate(GDDDaily = calc.daily.GDD(max = Max, min = Min)) %>%
-  filter(JulianDay >= 131) %>%
-#  filter(JulianDay < yday(Sys.Date())) %>%
+  filter(JulianDay >= 130) %>%
+  filter(JulianDay < yday(Sys.Date()) + 1) %>% # Still don't understand the +1
   arrange(JulianDay) %>%
   select(Date, Max, Min, Rain, GDDDaily) %>%
   CumulativeRain() %>%
-  AddField("28E", 1)
+  AddField("593", 1) %>%
+  AddField("25N", 2) %>%
+  AddField("28E", 2) %>%
+  AddField("713", 7)
 
 sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "ARL_automatic")
 
