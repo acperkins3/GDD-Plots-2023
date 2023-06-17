@@ -414,13 +414,18 @@ WMARSExisting <- read.csv("WMARS_existing.csv") %>%
   select(Date, M1500) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-Merged <- WMARSExisting %>%
-  gather(M1500, key = "Field", value = "GDDs") %>%
+ARLExisting <- read.csv("Arlington_existing.csv") %>%
+  select(Date, `25N`) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%y"))
+
+Merged <- merge(WMARSExisting, ARLExisting, by = "Date") %>%
+  gather(M1500, `25N`, key = "Field", value = "GDDs") %>%
   mutate(Field = case_when(
-    Field == "M1500" ~ "West Madison (M1500)"
+    Field == "M1500" ~ "West Madison (M1500)",
+    Field == "25N" ~ "Arlington (25N)"
   ))
 
-Merged$Field <- factor(Merged$Field, levels = c("West Madison (M1500)"))
+Merged$Field <- factor(Merged$Field, levels = c("West Madison (M1500)", "Arlington (25N)"))
 
 ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() +
@@ -465,7 +470,7 @@ ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
 ggsave("NurseriesGDDs.png", dpi=500, width = 6, height = 4, units = "in")
 ```
 
-## Rainfall
+### Rainfall
 
 ```{r}
 HANExisting <- read.csv("Hancock_existing.csv", check.names = FALSE) %>%
@@ -496,7 +501,7 @@ ggplot(Merged, aes(Date, Rainfall, group=Location, color=Location)) +
   ylab("Cumulative rainfall (in.)") +
   scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) +
   #scale_x_date(limits = c(as.Date("04/25/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y"))) +
-  scale_y_continuous(limits = c(0, 5)) +
+  #scale_y_continuous(limits = c(0, 5)) +
   labs(title = "Rainfall", subtitle = "Note: WM rainfall periods start and end at 6 am rather than midnight")
 
 ggsave("Rainfall.png", dpi=200, width = 6, height = 4, units = "in")
