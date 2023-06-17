@@ -414,7 +414,7 @@ WMARSExisting <- read.csv("WMARS_existing.csv") %>%
   select(Date, M1500) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y"))
 
-ARLExisting <- read.csv("Arlington_existing.csv") %>%
+ARLExisting <- read.csv("Arlington_existing.csv", check.names = FALSE) %>%
   select(Date, `25N`) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y"))
 
@@ -460,12 +460,12 @@ ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
   ylab("Cumulative GDDs (ºF)") +
   ggtitle("Nurseries and Observations") +
   geom_hline(yintercept = 1200, linetype = 'dotted', col = 'blue') +
-  annotate("text", x = as.Date("05/19/2023", "%m/%d/%y"), y = 1100, label = "Approximate start of flowering") +
+  annotate("text", x = as.Date("05/29/2023", "%m/%d/%y"), y = 1100, label = "Approximate start of flowering") +
   geom_hline(yintercept = 120, linetype = 'dotted', col = 'blue') +
   #geom_hline(yintercept = 2700, linetype = 'dotted', col = 'black') +
   #annotate("text", x = as.Date("05/10/2023", "%m/%d/%y"), y = 2550, label = "~ physiological maturity") +
   #scale_x_date(limits = c(as.Date("05/1/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y"))) +
-  annotate("text", x = as.Date("05/19/2023", "%m/%d/%y"), y = 170, label = "Approximate time of emergence")
+  annotate("text", x = as.Date("05/29/2023", "%m/%d/%y"), y = 170, label = "Approximate time of emergence")
 
 ggsave("NurseriesGDDs.png", dpi=500, width = 6, height = 4, units = "in")
 ```
@@ -505,6 +505,24 @@ ggplot(Merged, aes(Date, Rainfall, group=Location, color=Location)) +
   labs(title = "Rainfall", subtitle = "Note: WM rainfall periods start and end at 6 am rather than midnight")
 
 ggsave("Rainfall.png", dpi=200, width = 6, height = 4, units = "in")
+```
+
+### Soil Moisture
+
+```{r}
+library(lubridate)
+moisture <- read.csv("ARLWatchdogExisting.csv") %>%
+  mutate(Time = as.POSIXct(Time)) %>%
+  mutate(Location = "Arlington (28E)")
+
+ggplot(moisture, aes(Time, SoilMoisture, color = Location)) +
+  geom_line() +
+  ylab("Soil moisture") +
+  xlab("Date") +
+  theme_classic() +
+  scale_color_manual(values = c("#619CFF", "black"))
+
+ggsave("SoilMoisture.png", dpi=200, width = 6, height = 4, units = "in")
 ```
 
 
