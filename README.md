@@ -6,7 +6,7 @@ This (very clunky) code webscrapes weather data for GDD and precipitation tracki
 
 For Arlington, Hancock, and Marshfield, temperature and precipitation both come from the [Michigan State weather stations](https://legacy.enviroweather.msu.edu/run.php?stn=hck&mod=w_sum&da1=7&mo1=4&da2=21&mo2=4&yr=2023&mc=604&ds=cd) located at those facilities. 
 
-**Update 6/13/23:** The Arlington weather station is no longer part of the Michigan State Network and was taken over by [Wisconet](https://wisconet.wisc.edu/stations/arlington/data_downloads.html), but it seems to be broken now and their website is terrible compared to the Michigan one. Therefore, starting 6/11/23, the Arlington weather data will come from our [WatchDog weather station there](https://www.specconnect.net/currentconditions/publicview?serialnumber=270011997&title=Current+Conditions&rfhours=24). 
+**Update 6/13/23:** The Arlington weather station is no longer part of the Michigan State Network and was taken over by [Wisconet](https://wisconet.wisc.edu/stations/arlington/data_downloads.html), but their website doesn't seem to work. Therefore, starting 6/11/23, the Arlington weather data will come from our [WatchDog weather station there](https://www.specconnect.net/currentconditions/publicview?serialnumber=270011997&title=Current+Conditions&rfhours=24). 
 
 For West Madison, the temperature data come from the Middleton Airport weather station (KC29), which is close by, and the precipitation data come from the weather station at the Charmany Farm Instructional Facility (UW-Madison School of Veterinary Medicine, Mineral Point Road, CHMW3). See the code for the API calls used. The KC29 data comes from `weather.gov` and CHMW3 comes from `mesonet.agron.iastate.edu`.
 
@@ -32,3 +32,5 @@ Please let us know if you have any questions or suggestions!
 <p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/Silage.png" /></p>
 
 <p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/NurseriesGDDs.png" /></p>
+
+<p align="center"><img src="https://raw.githubusercontent.com/acperkins3/GDD-Plots-2023/main/SoilMoisture.png" /></p>

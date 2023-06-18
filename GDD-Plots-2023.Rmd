@@ -517,7 +517,7 @@ moisture <- read.csv("ARLWatchdogExisting.csv") %>%
 
 ggplot(moisture, aes(Time, SoilMoisture, color = Location)) +
   geom_line() +
-  ylab("Soil moisture") +
+  ylab("Soil moisture (%)") +
   xlab("Date") +
   theme_classic() +
   scale_color_manual(values = c("#619CFF", "black"))
