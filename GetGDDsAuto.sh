@@ -1,4 +1,3 @@
-sleep 14400
 for i in {1..1000}
 do
 Rscript -e "rmarkdown::render('GDD-Plots-2023.Rmd')"
