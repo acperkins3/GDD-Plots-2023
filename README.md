@@ -8,6 +8,8 @@ For Arlington, Hancock, and Marshfield, temperature and precipitation both come 
 
 **Update 6/13/23:** The Arlington weather station is no longer part of the Michigan State Network and was taken over by [Wisconet](https://wisconet.wisc.edu/stations/arlington/data_downloads.html), but their website doesn't seem to work. Therefore, starting 6/11/23, the Arlington weather data will come from our [WatchDog weather station there](https://www.specconnect.net/currentconditions/publicview?serialnumber=270011997&title=Current+Conditions&rfhours=24). 
 
+On June 24, the webscraping for the Watchdog accidentally stopped, so I added the Watchdog values manually.
+
 For West Madison, the temperature data come from the Middleton Airport weather station (KC29), which is close by, and the precipitation data come from the weather station at the Charmany Farm Instructional Facility (UW-Madison School of Veterinary Medicine, Mineral Point Road, CHMW3). See the code for the API calls used. The KC29 data comes from `weather.gov` and CHMW3 comes from `mesonet.agron.iastate.edu`.
 
 The data structure is a bit complicated, but it's a product of the way the APIs work.
