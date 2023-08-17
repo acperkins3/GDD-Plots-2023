@@ -274,29 +274,13 @@ if (!file.exists("Arlington_existing.csv")) {
 Existing <- read.csv("Arlington_existing.csv") %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
 
-NewTemp <- read.csv("ARLWatchdogExisting.csv") %>%
-  mutate(Date = as.character(as.Date(Time))) %>%
+New <- read.csv("ARLVisualCrossing.csv") %>%
+  mutate(Date = as.character(as.Date(datetime))) %>%
   separate(Date, c("Year", "Month", "Day")) %>%
   mutate(Date = paste(Month, Day, Year, sep="/")) %>%
-  group_by(Date) %>%
-  summarize(Min = min(AirTemp),
-            Max = max(AirTemp)) %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
-  ungroup()
+  select(Date, Max = tempmax, Min = tempmin, Rain = precip, JulianDay)
 
-NewRain <- read.csv("ARLWatchdogExisting.csv") %>%
-  mutate(Date = as.character(as.Date(Time))) %>%
-  separate(Date, c("Year", "Month", "Day")) %>%
-  mutate(Date = paste(Month, Day, Year, sep="/")) %>%
-  group_by(Date) %>%
-  slice_tail() %>%
-  mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
-  ungroup() %>%
-  select(JulianDay, Rain = Rainfall)
-
-NewMerged <- merge(NewTemp, NewRain, by = "JulianDay") %>%
-  filter(JulianDay %!in% Existing$JulianDay) %>%
-  filter(JulianDay > 130)
 
 New <- merge(Existing, NewMerged, sort=FALSE, all=TRUE) %>%
   mutate(GDDDaily = calc.daily.GDD(max = Max, min = Min)) %>%
