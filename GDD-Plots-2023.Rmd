@@ -282,7 +282,7 @@ New <- read.csv("ARLVisualCrossing.csv") %>%
   select(Date, Max = tempmax, Min = tempmin, Rain = precip, JulianDay)
 
 
-New <- merge(Existing, NewMerged, sort=FALSE, all=TRUE) %>%
+New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   mutate(GDDDaily = calc.daily.GDD(max = Max, min = Min)) %>%
   filter(JulianDay >= 130) %>%
   filter(JulianDay < yday(Sys.Date()) + 1) %>% # Still don't understand the +1
