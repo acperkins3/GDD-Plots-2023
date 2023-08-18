@@ -385,8 +385,7 @@ ggplot(Merged, aes(Date, GDDs, group=Field, color=Field)) +
   #annotate("text", x = as.Date("06/10/2023", "%m/%d/%y"), y = 170, label = "Approximate time of emergence") +
   scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black")) +
   geom_hline(yintercept = 2700, linetype = 'dotted', col = 'black') +
-  annotate("text", x = as.Date("06/10/2022", "%m/%d/%y"), y = 2550, label = "~ physiological maturity")  +
-  labs(subtitle = "ARL weather station is currently broken")
+  annotate("text", x = as.Date("06/10/2022", "%m/%d/%y"), y = 2550, label = "~ physiological maturity")
 
 ggsave("TrialGDDs.png", dpi=200, width = 6, height = 4, units = "in")
 ```
@@ -507,7 +506,7 @@ ggplot(moisture, aes(Time, SoilMoisture, color = Location)) +
   xlab("Date") +
   theme_classic() +
   scale_color_manual(values = c("#619CFF", "black")) +
-  labs(subtitle = "ARL weather station is currently broken")
+  labs(subtitle = "ARL WatchDog is currently broken")
 
 ggsave("SoilMoisture.png", dpi=200, width = 6, height = 4, units = "in")
 ```

@@ -10,7 +10,7 @@ For Arlington, Hancock, and Marshfield, temperature and precipitation both come 
 
 On June 24, the webscraping for the Watchdog accidentally stopped, so I added the Watchdog values manually.
 
-**Update 8/17/13** The Arlington WatchDog got full of water in the rainstorm and was destroyed. The Wisconet website still doesn't have any recent observations on it, so we will have to switch to the [Visual Crossing API](https://www.visualcrossing.com/resources/documentation/weather-api/timeline-weather-api/) starting on 8/13/23. I can't put the actual API call in the GitHub repository because that would make my API key public online, but it is like this
+**Update 8/17/23** The Arlington WatchDog got full of water in the rainstorm and was destroyed. The Wisconet website still doesn't have any recent observations on it, so we will have to switch to the [Visual Crossing API](https://www.visualcrossing.com/resources/documentation/weather-api/timeline-weather-api/) starting on 8/13/23. I can't put the actual API call in the GitHub repository because that would make my API key public online, but it is like this
 
 ```
 library(tidyverse)
