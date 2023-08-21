@@ -279,6 +279,7 @@ New <- read.csv("ARLVisualCrossing.csv") %>%
   separate(Date, c("Year", "Month", "Day")) %>%
   mutate(Date = paste(Month, Day, Year, sep="/")) %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
+  filter(JulianDay %!in% Existing$JulianDay) %>% # Didn't use to be necessary, but there is some stochasticity in the values the API gives back. Therefore, they might not match perfectly
   select(Date, Max = tempmax, Min = tempmin, Rain = precip, JulianDay)
 
 
