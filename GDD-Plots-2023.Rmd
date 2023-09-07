@@ -247,7 +247,8 @@ New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   AddField("B502", 20) %>%
   AddField("H101", 20) %>%
   AddField("B601", 29) %>%
-  AddField("H702", 30)
+  AddField("H702", 30) %>%
+  AddField("CERCA", 128)
 
 
 sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "WM_automatic")
@@ -435,10 +436,10 @@ ggsave("Silage.png", dpi=200, width = 6, height = 4, units = "in")
 WMARSExisting <- read.csv("WMARS_existing.csv") %>%
   select(Date, H703, B501, B601, H702) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y")) %>%
-  gather(H703, B501, B601, H702, key = "Field", value = "GDDs") %>%
+  gather(H703, B501, B601, H702, CERCA, key = "Field", value = "GDDs") %>%
   mutate(Field = ifelse(Field == "B501", "B501, B502, H101", Field))
 
-WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101", "B601", "H702"))
+WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101", "B601", "H702", "CERCA"))
 
 ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() + 
@@ -493,24 +494,7 @@ ggplot(Merged, aes(Date, Rainfall, group=Location, color=Location)) +
 ggsave("Rainfall.png", dpi=200, width = 6, height = 4, units = "in")
 ```
 
-### Soil Moisture
 
-```{r}
-library(lubridate)
-moisture <- read.csv("ARLWatchdogExisting.csv") %>%
-  mutate(Time = as.POSIXct(Time)) %>%
-  mutate(Location = "Arlington (28E)")
-
-ggplot(moisture, aes(Time, SoilMoisture, color = Location)) +
-  geom_line() +
-  ylab("Soil moisture (%)") +
-  xlab("Date") +
-  theme_classic() +
-  scale_color_manual(values = c("#619CFF", "black")) +
-  labs(subtitle = "ARL WatchDog is currently broken")
-
-ggsave("SoilMoisture.png", dpi=200, width = 6, height = 4, units = "in")
-```
 
 
 
