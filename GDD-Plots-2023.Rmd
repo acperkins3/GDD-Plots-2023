@@ -435,7 +435,7 @@ ggsave("Silage.png", dpi=200, width = 6, height = 4, units = "in")
 WMARSExisting <- read.csv("WMARS_existing.csv") %>%
   select(Date, H703, B501, B601, H702) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y")) %>%
-  gather(H703, B501, B601, H702, CERCA, key = "Field", value = "GDDs") %>%
+  gather(H703, B501, B601, H702, key = "Field", value = "GDDs") %>%
   mutate(Field = ifelse(Field == "B501", "B501, B502, H101", Field))
 
 WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101", "B601", "H702"))
