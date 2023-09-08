@@ -378,9 +378,10 @@ New &lt;- read.csv(&quot;WMARS.csv&quot;) %&gt;%
     is.na(Rain) ~ 0,
     Rain == &quot;&quot; ~ 0,
     TRUE ~ Rain
-  )) # Sometimes there are missing values</code></pre>
-<pre><code>## Warning in mask$eval_all_mutate(quo): NAs introduced by coercion</code></pre>
-<pre class="r"><code>New &lt;- merge(Existing, New, sort=FALSE, all=TRUE) %&gt;%
+  )) # Sometimes there are missing values
+
+
+New &lt;- merge(Existing, New, sort=FALSE, all=TRUE) %&gt;%
   mutate(GDDDaily = calc.daily.GDD(max = MaxTemp, min = MinTemp)) %&gt;%
   filter(JulianDay &gt; 123) %&gt;%
   filter(JulianDay &lt;= yday(Sys.Date())) %&gt;% #This isn&#39;t quite right
