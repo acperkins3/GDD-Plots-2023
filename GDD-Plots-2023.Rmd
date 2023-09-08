@@ -247,8 +247,7 @@ New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   AddField("B502", 20) %>%
   AddField("H101", 20) %>%
   AddField("B601", 29) %>%
-  AddField("H702", 30) %>%
-  AddField("CERCA", 128)
+  AddField("H702", 30)
 
 
 sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "WM_automatic")
@@ -439,7 +438,7 @@ WMARSExisting <- read.csv("WMARS_existing.csv") %>%
   gather(H703, B501, B601, H702, CERCA, key = "Field", value = "GDDs") %>%
   mutate(Field = ifelse(Field == "B501", "B501, B502, H101", Field))
 
-WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101", "B601", "H702", "CERCA"))
+WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101", "B601", "H702"))
 
 ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() + 
