@@ -247,7 +247,8 @@ New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   AddField("B502", 20) %>%
   AddField("H101", 20) %>%
   AddField("B601", 29) %>%
-  AddField("H702", 30)
+  AddField("H702", 30) %>%
+  AddField("CERCA", 131)
 
 
 sheet_write(New, "1_QmalVr6MfYJ7xmk6pPng4dfTFPoGuEu0qGVzhs0ryE", "WM_automatic")

@@ -1,4 +1,4 @@
-sleep 32400
+sleep 1800
 for i in {1..1000}
 do
 Rscript -e "rmarkdown::render('~/GetARL.Rmd')"
