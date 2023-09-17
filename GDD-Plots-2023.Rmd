@@ -434,12 +434,12 @@ ggsave("Silage.png", dpi=200, width = 6, height = 4, units = "in")
 
 ```{r}
 WMARSExisting <- read.csv("WMARS_existing.csv") %>%
-  select(Date, H703, B501, B601, H702) %>%
+  select(Date, H703, B501, B601, H702, CERCA) %>%
   mutate(Date = as.Date(Date, "%m/%d/%y")) %>%
-  gather(H703, B501, B601, H702, key = "Field", value = "GDDs") %>%
+  gather(H703, B501, B601, H702, CERCA, key = "Field", value = "GDDs") %>%
   mutate(Field = ifelse(Field == "B501", "B501, B502, H101", Field))
 
-WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101", "B601", "H702"))
+WMARSExisting$Field <- factor(WMARSExisting$Field, levels = c("H703","B501, B502, H101", "B601", "H702", "CERCA"))
 
 ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
   geom_line() + 
@@ -447,10 +447,11 @@ ggplot(WMARSExisting, aes(Date, GDDs, group=Field, color=Field)) +
   ylab("Cumulative GDDs (ºF)") +
   ggtitle("Nurseries and Observations") +
   geom_hline(yintercept = 1200, linetype = 'dotted', col = 'blue') +
-  annotate("text", x = as.Date("06/10/2023", "%m/%d/%y"), y = 1100, label = "~ start of flowering") +
+  annotate("text", x = as.Date("06/10/2023", "%m/%d/%y"), y = 1350, label = "~ start of flowering") +
   geom_hline(yintercept = 120, linetype = 'dotted', col = 'blue') +
   geom_hline(yintercept = 2700, linetype = 'dotted', col = 'black') +
-  annotate("text", x = as.Date("06/10/2023", "%m/%d/%y"), y = 2550, label = "~ physiological maturity") #+
+  annotate("text", x = as.Date("06/10/2023", "%m/%d/%y"), y = 2550, label = "~ physiological maturity") +
+  scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "black", "gray"))
   #scale_x_date(limits = c(as.Date("05/1/2023", "%m/%d/%y"), as.Date("05/25/2023", "%m/%d/%y"))) #+
   #annotate("text", x = as.Date("06/10/2023", "%m/%d/%y"), y = 170, label = "Approximate time of emergence")
 
