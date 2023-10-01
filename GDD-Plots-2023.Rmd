@@ -69,51 +69,15 @@ The values are in inches. Same for the Michigan data
 
 ### Hancock
 
-Michigan has changed its website in 2022, so I added `legacy` to the beginnings of the URLs
-
-Year is hard coded in here!
-
-```{r}
-library(rvest)
-
-Date <- Sys.Date()
-
-data <- read_html(paste("https://legacy.enviroweather.msu.edu/run.php?stn=hck&mod=w_sum&da1=28&mo1=4&da2=", (as.numeric(substr(Date, 9, 10))-1), "&mo2=", substr(Date, 6, 7), "&yr=2023&mc=604&ds=cd", sep="")) %>% 
-  html_elements("td") %>%
-  html_text2()
-
-matrix <- t(replace(matrix(NA, 17, ceiling(length(data) / 17)), seq_along(data), data))
-data <- as.data.frame(matrix)
-
-data[1,16] <- "Rain"
-
-write.table(data, "Hancock.csv", sep=",", col.names=FALSE, row.names=FALSE)
-
-```
+It's now from VisualCrossing because Wisconet took over the weather station unfortunately
 
 ### Arlington
 
-
+It's now from VisualCrossing because Wisconet took over the weather station unfortunately
 
 ### Marshfield
 
-```{r}
-library(rvest)
-
-Date <- Sys.Date()
-
-data <- read_html(paste("https://legacy.enviroweather.msu.edu/run.php?stn=mar&mod=w_sum&da1=10&mo1=5&da2=", (as.numeric(substr(Date, 9, 10))-1), "&mo2=", substr(Date, 6, 7), "&yr=2023&mc=604&ds=cd", sep="")) %>% 
-  html_elements("td") %>%
-  html_text2()
-
-matrix <- t(replace(matrix(NA, 17, ceiling(length(data) / 17)), seq_along(data), data))
-data <- as.data.frame(matrix)
-
-data[1,16] <- "Rain"
-
-write.table(data, "Marshfield.csv", sep=",", col.names=FALSE, row.names=FALSE)
-
-```
+It's now from VisualCrossing because Wisconet took over the weather station unfortunately
 
 ## Updating the sheets
 
@@ -174,16 +138,18 @@ if (!file.exists("Hancock_existing.csv")) {
 Existing <- read.csv("Hancock_existing.csv") %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
 
-New <- read.csv("Hancock.csv") %>%
-  mutate(Date = paste(Date, "/2023", sep="")) %>%
+New <- read.csv("HANVisualCrossing.csv") %>%
+  mutate(Date = as.character(as.Date(datetime))) %>%
+  separate(Date, c("Year", "Month", "Day")) %>%
+  mutate(Date = paste(Month, Day, Year, sep="/")) %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
-  filter(JulianDay %!in% Existing$JulianDay) %>%
-  filter(JulianDay > 115)
+  filter(JulianDay %!in% Existing$JulianDay) %>% # Didn't use to be necessary, but there is some stochasticity in the values the API gives back. Therefore, they might not match perfectly
+  select(Date, Max = tempmax, Min = tempmin, Rain = precip, JulianDay)
 
 New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   mutate(GDDDaily = calc.daily.GDD(max = Max, min = Min)) %>%
   filter(JulianDay >= 115) %>%
-#  filter(JulianDay < yday(Sys.Date())) %>%
+  filter(JulianDay < yday(Sys.Date()) + 1) %>% # + 1 needed because of parsing first 2 characters of year
   arrange(JulianDay) %>%
   select(Date, Max, Min, Rain, GDDDaily) %>%
   CumulativeRain() %>%
@@ -321,16 +287,18 @@ if (!file.exists("Marshfield_existing.csv")) {
 Existing <- read.csv("Marshfield_existing.csv") %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y")))
 
-New <- read.csv("Marshfield.csv") %>%
-  mutate(Date = paste(Date, "/2023", sep="")) %>%
+New <- read.csv("MARVisualCrossing.csv") %>%
+  mutate(Date = as.character(as.Date(datetime))) %>%
+  separate(Date, c("Year", "Month", "Day")) %>%
+  mutate(Date = paste(Month, Day, Year, sep="/")) %>%
   mutate(JulianDay = yday(as.Date(Date, "%m/%d/%y"))) %>%
-  filter(JulianDay %!in% Existing$JulianDay) %>%
-  filter(JulianDay > 145)
+  filter(JulianDay %!in% Existing$JulianDay) %>% # Didn't use to be necessary, but there is some stochasticity in the values the API gives back. Therefore, they might not match perfectly
+  select(Date, Max = tempmax, Min = tempmin, Rain = precip, JulianDay)
 
 New <- merge(Existing, New, sort=FALSE, all=TRUE) %>%
   mutate(GDDDaily = calc.daily.GDD(max = Max, min = Min)) %>%
   filter(JulianDay >= 145) %>%
-#  filter(JulianDay < yday(Sys.Date())) %>%
+  filter(JulianDay < yday(Sys.Date()) + 1) %>%
   arrange(JulianDay) %>%
   select(Date, Max, Min, Rain, GDDDaily) %>%
   CumulativeRain() %>%
