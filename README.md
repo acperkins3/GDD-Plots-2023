@@ -15,12 +15,13 @@ On June 24, the webscraping for the Watchdog accidentally stopped, so I added th
 ```
 library(tidyverse)
 library(curl)
-library(rjson)
 
 date <- Sys.time()
 
 curl_download(paste0("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/43.3039263,-89.3877515/2023-08-13/2023-", str_sub(date, 6, 10),  "/?key=My_Key&contentType=csv&include=days"), "~/GDD-Plots-2023/ARLVisualCrossing.csv")
 ```
+
+**Update 10/1/23** More bad news: the Hancock and Marshfield weather stations were taken over by Wisconet on 9/24, so the weather data starting 9/24 are from VisualCrossing. 
 
 with `My_Key` replaced with my API key. VisualCrossing works by calculating a weighted average from nearby weather stations based on how close they are, and you can see what they are if you make this API call without the `contentType` and `include` arguments. The Visual Crossing download includes values for the current day, which are a forecast, but we don't use those.
 
